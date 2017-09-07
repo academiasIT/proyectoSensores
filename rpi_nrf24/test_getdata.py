@@ -49,11 +49,11 @@ try:
         recv_msg = []
         radio.read(recv_msg, 24)
         recvb = pack('=24B', *recv_msg)
-        result = unpack('=LffffII', recvb)  # ulong,float x4, uint x2
+        result = unpack('=LffffHH', recvb)  # ulong,float x4, uint x2
         print("momento de la captura: ", str(result[0]))
         print("material particulado pm2.5: ", str(result[1]))
         print("material particulado pm10", str(result[2]))
-        print("temperatura °C: ", str(result[3]))
+        print("temperatura C: ", str(result[3]))
         print("humedad %: ", str(result[4]))
         print("monoxido de carbono : ", str(result[5]))
         print("ozono : ", str(result[6]))
@@ -65,7 +65,7 @@ try:
         dbc.execute('''SELECT id from appSensores_sensormuestreo where id=(select max(id) from appSensores_sensormuestreo)''')
         idm=dbc.fetchone()
         dbc.execute('''INSERT INTO appSensores_sensorpm25 (idMuestreo_id,pm25) VALUES(?,?)''', (idm[0], result[1]))
-        dbc.execute('''INSERT INTO appSensores_sensorpm10 (idMuestreo_id,dipm10) VALUES(?,?)''', (idm[0], result[2]))
+        dbc.execute('''INSERT INTO appSensores_sensorpm10 (idMuestreo_id,pm10) VALUES(?,?)''', (idm[0], result[2]))
         dbc.execute('''INSERT INTO appSensores_sensortemperatura (idMuestreo_id,temperatura) VALUES(?,?)''', (idm[0], result[3]))
         dbc.execute('''INSERT INTO appSensores_sensorhumedad (idMuestreo_id,humedad) VALUES(?,?)''', (idm[0], result[4]))
         dbc.execute('''INSERT INTO appSensores_sensorco (idMuestreo_id,co) VALUES(?,?)''', (idm[0], float(result[5])))
