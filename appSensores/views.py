@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.shortcuts import render
+from django.core.exceptions import ObjectDoesNotExist
 
 # Create your views here.
 from django.http import HttpResponse
@@ -12,7 +13,8 @@ from .models import *
 from jchart import Chart #Para graficos
 
 def index(request):
-    ultimosMuestreos = sensorMuestreo.objects.all()[:5]
+    #ultimosMuestreos = sensorMuestreo.objects.all()[:5]
+    ultimosMuestreos = sensorMuestreo.objects.all().order_by('-id')[:10]
     template = loader.get_template('appSensores/index.html')
     context = {
         'ultimosMuestreos': ultimosMuestreos,
@@ -25,7 +27,10 @@ def detalleMuestreo(request, muestreo_id):
     try:
         detalle = sensorMuestreo.objects.get(pk=muestreo_id)
         detalleAcelerometro = sensorAcelerometro.objects.get(idMuestreo_id=muestreo_id)
-        detalleActuador = sensorActuador.objects.get(idMuestreo_id=muestreo_id)
+        try:
+            detalleActuador = sensorActuador.objects.get(idMuestreo_id=muestreo_id)
+        except ObjectDoesNotExist:
+            detalleActuador = None
         detalleDistancia = sensorDistancia.objects.get(idMuestreo_id=muestreo_id)
         detalleHumedad = sensorHumedad.objects.get(idMuestreo_id=muestreo_id)
         detalleMovimiento = sensorMovimiento.objects.get(idMuestreo_id=muestreo_id)
