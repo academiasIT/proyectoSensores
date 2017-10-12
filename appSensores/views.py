@@ -13,7 +13,8 @@ from .models import *
 from jchart import Chart #Para graficos
 
 def index(request):
-    ultimosMuestreos = sensorMuestreo.objects.all()[:5]
+    #ultimosMuestreos = sensorMuestreo.objects.all()[:5]
+    ultimosMuestreos = sensorMuestreo.objects.all().order_by('-id')[:10]
     template = loader.get_template('appSensores/index.html')
     context = {
         'ultimosMuestreos': ultimosMuestreos,
