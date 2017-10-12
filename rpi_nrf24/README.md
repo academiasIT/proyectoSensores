@@ -4,10 +4,10 @@ El directorio incluye los siguientes archivos:
 - test_getdata.py
 - lib_nrf24.py
 
-###Instalacion de libreria SpiDev:
+### Instalacion de libreria SpiDev:
 ```
-$wget https://github.com/Gadgetid/py-spidev/archive/master.zip
-$unzip master.zip
-$cd py-spidev-master
-$sudo python setup.py install
+wget https://github.com/Gadgetoid/py-spidev/archive/master.zip
+unzip master.zip
+cd py-spidev-master
+sudo python setup.py install
 ```
