@@ -11,6 +11,7 @@ from django.template import loader
 import datetime
 from .models import *
 from jchart import Chart #Para graficos
+from jchart.config import Axes, DataSet, rgba
 
 def index(request):
     #ultimosMuestreos = sensorMuestreo.objects.all()[:5]
@@ -58,27 +59,42 @@ def manejoGraficos(request):
 class graficaTemperatura(Chart):
     chart_type = 'line'
     responsive = True
+    scales = {
+        'xAxes': [Axes(type='time', position='bottom')],
+    }
+
+
 
     def get_datasets(self, **kwargs):
         #Se leen todas las temperaturas desde BD
         temperaturas = sensorTemperatura.objects.all()
         #Para cada registro de temperatura, se obtiene el ID del muestreo y valor. Se presenta como lista
-        data = [{'x': temp.idMuestreo_id, 'y': temp.temperatura} for temp in temperaturas]
+        #data = [{'x': temp.idMuestreo_id, 'y': temp.temperatura} for temp in temperaturas]
+        data = [{'x':temp.id, 'y': temp.temperatura} for temp in temperaturas]
+        data_scatter = data
+        data_line = data
         return [{
-            'label': "Temperaturas Registradas",
-            'data': data
-        }]
+            'type':'line',
+            'label': "Temperatura Registrada",
+            'data': data,
+            'borderColor':'brown'
+        }
+        ]
 
 class graficaHumedad(Chart):
     chart_type = 'line'
     responsive = True
+    scales = {
+        'xAxes': [Axes(type='time', position='bottom')],
+    }
 
     def get_datasets(self, **kwargs):
         #Se leen todas los registros de Humedad desde BD
         humedades = sensorHumedad.objects.all()
         #Para cada registro de humedad, se obtiene el ID del muestreo y valor. Se presenta como lista
-        data = [{'x': hum.idMuestreo_id, 'y': hum.humedad} for hum in humedades]
+        data = [{'y': hum.humedad, 'x': hum.id} for hum in humedades]
         return [{
             'label': "Humedad Registrada",
-            'data': data
+            'data': data,
+            'borderColor': 'orange'
         }]
