@@ -70,7 +70,7 @@ try:
         dbc.execute('''INSERT INTO appSensores_sensordistancia (idMuestreo_id,distancia) VALUES(?,?)''',(idm[0],float(result[4])))
         dbc.execute('''INSERT INTO appSensores_sensortemperatura (idMuestreo_id,temperatura) VALUES(?,?)''',(idm[0],result[5]))
         dbc.execute('''INSERT INTO appSensores_sensorhumedad (idMuestreo_id,humedad) VALUES(?,?)''',(idm[0],result[6]))
-        if result[7]==15:
+        if result[7]==b'\x0f':
             mov=False
         else:
             mov=True
