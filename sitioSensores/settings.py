@@ -25,12 +25,15 @@ SECRET_KEY = 'w3zg)*8*$6oy^y=8&1=tzxaj-0m2mnxt_rg1%)zv=i)&nop7-a'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1','172.16.49.121']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'admin_interface',
+    'flat_responsive',
+    'colorfield',
     'appSensores.apps.AppsensoresConfig',
     'django.contrib.admin',
     'django.contrib.auth',
