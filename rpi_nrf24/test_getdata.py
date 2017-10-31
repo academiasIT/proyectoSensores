@@ -8,10 +8,10 @@ import sqlite3
 
 GPIO.setmode(GPIO.BCM)
 
-addr = [[0xe8,0xe8,0xf0,0xf0, 0xe1],[0xf0,0xf0,0xf0,0xf0,0xe1]]
+addr = [[0xe8, 0xe8, 0xf0, 0xf0, 0xe1], [0xf0, 0xf0, 0xf0, 0xf0, 0xe1]]
 
-radio = NRF24(GPIO,spidev.SpiDev())
-radio.begin(0,25)
+radio = NRF24(GPIO, spidev. SpiDev())
+radio.begin(0, 25)
 radio.setPayloadSize(32)
 radio.setChannel(0x76)
 radio.setDataRate(NRF24.BR_1MBPS)
@@ -22,7 +22,7 @@ radio.enableDynamicPayloads()
 radio.enableAckPayload()
 
 radio.openWritingPipe(addr[0])
-radio.openReadingPipe(1,addr[1])
+radio.openReadingPipe(1, addr[1])
 radio.printDetails()
 radio.stopListening()
 
@@ -38,8 +38,8 @@ try:
     while(1):
         time_ini = time.time()
         print("Recibiendo datos del sensor...")
-        while( not radio.available()):
-            if (time.time()-time_ini) > TIME_OUT:
+        while(not radio.available()):
+            if (time.time() - time_ini) > TIME_OUT:
                 print("(WARNING) tiempo de espera agotado!")
                 print("(INFO) intentando inicializacion de sensores")
                 radio.stopListening()
@@ -47,57 +47,33 @@ try:
                 radio.startListening()
                 time_ini = time.time()
         recv_msg = []
-        radio.read(recv_msg,22)
-        recvb=pack('=22B',*recv_msg)
-        result = unpack('=Lhhhhffcc',recvb )
-        print("momento de la captura: ",str(result[0]))
-        print("acelerometro x: ",str(result[1]))
-        print("acelerometro y: ",str(result[2]))
-        print("acelerometro z: ",str(result[3]))
-        print("distancia : ",str(result[4]))
-        print("temperatura : ",str(result[5]))
-        print("humedad : ",str(result[6]))
-        print("movimiento: ",str(result[7]))
-        print("reles : ",str(result[8]))
+        radio.read(recv_msg, 24)
+        recvb = pack('=24B', *recv_msg)
+        result = unpack('=LffffII', recvb)  # ulong,float x4, uint x2
+        print("momento de la captura: ", str(result[0]))
+        print("material particulado pm2.5: ", str(result[1]))
+        print("material particulado pm10", str(result[2]))
+        print("temperatura °C: ", str(result[3]))
+        print("humedad %: ", str(result[4]))
+        print("monoxido de carbono : ", str(result[5]))
+        print("ozono : ", str(result[6]))
 
         #base de datos
         dbc = db.cursor()
         date_muestreo = time.strftime('%Y-%m-%d %H:%M:%S')
-        dbc.execute('''INSERT INTO appSensores_sensormuestreo (fechaMuestreo,origenMuestreo) VALUES(?,?)''',(date_muestreo,"sensorX_test"))
+        dbc.execute('''INSERT INTO appSensores_sensormuestreo (fechaMuestreo,origenMuestreo) VALUES(?,?)''', (date_muestreo, "sensorX_test"))
         dbc.execute('''SELECT id from appSensores_sensormuestreo where id=(select max(id) from appSensores_sensormuestreo)''')
         idm=dbc.fetchone()
-        dbc.execute('''INSERT INTO appSensores_sensoracelerometro (idMuestreo_id,ejeX,ejeY,ejeZ) VALUES(?,?,?,?)''',(idm[0],float(result[1]),float(result[2]),float(result[3])))
-        dbc.execute('''INSERT INTO appSensores_sensordistancia (idMuestreo_id,distancia) VALUES(?,?)''',(idm[0],float(result[4])))
-        dbc.execute('''INSERT INTO appSensores_sensortemperatura (idMuestreo_id,temperatura) VALUES(?,?)''',(idm[0],result[5]))
-        dbc.execute('''INSERT INTO appSensores_sensorhumedad (idMuestreo_id,humedad) VALUES(?,?)''',(idm[0],result[6]))
-        if result[7]==b'\x0f':
-            mov=False
-        else:
-            mov=True
-        dbc.execute('''INSERT INTO appSensores_sensormovimiento (idMuestreo_id,movimiento) VALUES(?,?)''',(idm[0],mov))
+        dbc.execute('''INSERT INTO appSensores_sensorpm25 (idMuestreo_id,pm25) VALUES(?,?)''', (idm[0], result[1]))
+        dbc.execute('''INSERT INTO appSensores_sensorpm10 (idMuestreo_id,dipm10) VALUES(?,?)''', (idm[0], result[2]))
+        dbc.execute('''INSERT INTO appSensores_sensortemperatura (idMuestreo_id,temperatura) VALUES(?,?)''', (idm[0], result[3]))
+        dbc.execute('''INSERT INTO appSensores_sensorhumedad (idMuestreo_id,humedad) VALUES(?,?)''', (idm[0], result[4]))
+        dbc.execute('''INSERT INTO appSensores_sensorco (idMuestreo_id,co) VALUES(?,?)''', (idm[0], float(result[5])))
+        dbc.execute('''INSERT INTO appSensores_sensoro3 (idMuestreo_id,o3) VALUES(?,?)''', (idm[0], float(result[6])))
         db.commit()
 
-        dbc.execute('''SELECT actuadorUno from appSensores_sensoractuador where id=(select max(id) from appSensores_sensoractuador)''')
-        rele1 = dbc.fetchone()
-        dbc.execute('''SELECT actuadorDos from appSensores_sensoractuador where id=(select max(id) from appSensores_sensoractuador)''')
-        rele2 = dbc.fetchone()
-        dbc.execute('''SELECT actuadorTres from appSensores_sensoractuador where id=(select max(id) from appSensores_sensoractuador)''')
-        rele3 = dbc.fetchone()
-        dbc.execute('''SELECT actuadorCuatro from appSensores_sensoractuador where id=(select max(id) from appSensores_sensoractuador)''')
-        rele4 = dbc.fetchone()
-        rele = rele1[0] | rele2[0]<<1 | rele3[0] <<2 | rele4[0]<<3
-        print("reles db: ",str(rele))
-        cmd_rele = [CMD_ACTIV_RELE,rele]
-        radio.stopListening()
-        radio.write(cmd_rele)
-        radio.startListening()
-        print("estado rele 1: "+str(rele1[0]))
-        print("estado rele 2: "+str(rele2[0]))
-        print("estado rele 3: "+str(rele3[0]))
-        print("estado rele 4: "+str(rele4[0]))
-
 except KeyboardInterrupt:
-    print("cerrando base de datos...")    
+    print("cerrando base de datos...")
     db.close()
     pass
-        
+
